@@ -3,14 +3,28 @@ import { useParams, useNavigate } from "react-router-dom";
 import useGetAllFiles from "../hooks/useFetchAllFiles";
 import { FileSkeleton } from "../components/FileSkeleton";
 import { FileCard } from "../components/FileCard";
+import { useState } from "react";
+import { CONFIG } from "../utils/config";
 
 export const MyDrive = ({ prefix = "" }) => {
+  const [progess , setProgress] = useState(0)
   const { folderName } = useParams();
   const navigate = useNavigate();
   const currentPrefix = folderName || prefix;
-
-  console.log("Current Prefix from MyDrive:", currentPrefix);
   const { files, loading, error } = useGetAllFiles(currentPrefix);
+
+  const handleUploadFile = (e) => {
+    const file = e.target.files[0]
+     const xhr = new XMLHttpRequest()
+   xhr.open("POST",CONFIG.BASE_URL, true)
+   xhr.setRequestHeader("fileName",file.name)
+   xhr.upload.addEventListener("progress",(event)=>{
+        const percentComplete = (event.loaded / event.total) * 100
+        setProgress(percentComplete.toFixed(2))
+
+   })
+   xhr.send(file)
+  }
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-center">
@@ -43,9 +57,19 @@ export const MyDrive = ({ prefix = "" }) => {
             {currentPrefix ? `Contents of ${currentPrefix}` : "Manage your files and folders"}
           </p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all text-sm">
-          + New Upload
-        </button>
+       <label className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all text-sm cursor-pointer inline-block">
+    
+    {/* The actual text goes here, inside the label, NOT the input */}
+    <span>{progess > 0 ? `Uploading... ${progess}%` : "+ New Upload"}</span>
+    
+    {/* The input is hidden, but still functional */}
+    <input 
+        type="file" 
+        onChange={handleUploadFile} 
+        className="hidden" 
+    />
+    
+</label>
       </header>
 
       {/* Grid Layout */}

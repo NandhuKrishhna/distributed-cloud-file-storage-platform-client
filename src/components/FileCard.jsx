@@ -10,6 +10,7 @@ export const FileCard = ({ file }) => {
  console.log("File",file)
   const { downloadFile } = useDownloadFile();
   const params = useParams();
+  console.log("params", params)
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,7 +33,10 @@ export const FileCard = ({ file }) => {
     if (isDirectory) {
       navigate(`/${file.name}`);
     } else {
-      window.open(`${CONFIG.BASE_URL}/${params.folderName}/${file.name}`);
+      const url = params.folderName 
+        ? `${CONFIG.BASE_URL}/${params.folderName}/${file.name}`
+        : `${CONFIG.BASE_URL}/${file.name}`;
+      window.open(url);
     }
     e.stopPropagation();
     setIsMenuOpen(false);
