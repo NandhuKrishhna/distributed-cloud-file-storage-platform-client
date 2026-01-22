@@ -1,17 +1,23 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import { CONFIG } from "../utils/config";
 import useDownloadFile from "../hooks/useDownloadFile";
 import useDeleteFiles from "../hooks/useDeleteFiles";
+import useRenameFile from "../hooks/useRenameFile";
 
 export const FileCard = ({ file,refetch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const isDirectory = file.type === "Directory";
+  const {deleteFile} = useDeleteFiles() 
   const { downloadFile } = useDownloadFile();
+  const {renameFile} = useRenameFile()
   const params = useParams();
   const navigate = useNavigate();
-  const {deleteFile} = useDeleteFiles()
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [newName, setNewName] = useState(file.name);
+  console.log("newName", newName)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -52,6 +58,19 @@ export const FileCard = ({ file,refetch }) => {
     const currentFolder = params.folderName ? `${params.folderName}/` : "";
     deleteFile(`${currentFolder}${file.name}`);
     setIsMenuOpen(false);
+    refetch()
+  };
+
+  const handleRenameClick = (e) => {
+    e.stopPropagation();
+    setIsMenuOpen(false);
+    setIsRenameModalOpen(true);
+  };
+
+  const handleRenameSubmit = async (e) => {
+    e.stopPropagation();
+    await renameFile(file.name, newName, params.folderName)
+    setIsRenameModalOpen(false);
     refetch()
   };
 
@@ -103,6 +122,15 @@ export const FileCard = ({ file,refetch }) => {
                     Download
                   </button>
                 )}
+                 {!isDirectory && (
+                  <button
+                    onClick={handleRenameClick}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors font-medium cursor-pointer"
+                  >
+                   <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    Rename
+                  </button>
+                )}
                 {!isDirectory && (
                   <button
                     onClick={handleDelete}
@@ -129,6 +157,65 @@ export const FileCard = ({ file,refetch }) => {
           {isDirectory ? "Folder" : "File"} • {new Date().toLocaleDateString()}
         </p>
       </div>
+
+      
+      {/* Rename Modal */}
+      {/* Rename Modal */}
+      {isRenameModalOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Rename File</h3>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Current Name</label>
+                <input 
+                  type="text" 
+                  value={file.name} 
+                  disabled 
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed focus:outline-none"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Name</label>
+                <input 
+                  type="text" 
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Enter new name"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 flex items-center justify-end gap-3">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsRenameModalOpen(false);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleRenameSubmit}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-600/20 transition-all cursor-pointer"
+              >
+                Rename
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
