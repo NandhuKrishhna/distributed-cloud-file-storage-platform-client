@@ -11,13 +11,12 @@ const useGetAllFiles = (prefix="") => {
         try {
             setLoading(true)
             const finalUrl = prefix? `${CONFIG.BASE_URL}/${prefix}`:CONFIG.BASE_URL
-            console.log("finalUrl",finalUrl)
             const response = await fetch(finalUrl)
             const data = await response.json();
             setFiles(data)
         } catch (error) {   
             setError(error)
-            console.log(error)
+   
         }finally{
             setLoading(false)
         }
@@ -27,7 +26,7 @@ const useGetAllFiles = (prefix="") => {
        fetchFiles()
     },[prefix])
 
-    return { files , loading , error }
+    return { files , loading , error, refetch: fetchFiles }
 }
 
 export default useGetAllFiles

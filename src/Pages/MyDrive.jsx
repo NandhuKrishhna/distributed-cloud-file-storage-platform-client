@@ -8,21 +8,30 @@ import { CONFIG } from "../utils/config";
 
 export const MyDrive = ({ prefix = "" }) => {
   const [progess , setProgress] = useState(0)
+  console.log("progess",progess)
   const { folderName } = useParams();
   const navigate = useNavigate();
   const currentPrefix = folderName || prefix;
-  const { files, loading, error } = useGetAllFiles(currentPrefix);
+  const { files, loading, error, refetch } = useGetAllFiles(currentPrefix);
 
   const handleUploadFile = (e) => {
     const file = e.target.files[0]
      const xhr = new XMLHttpRequest()
    xhr.open("POST",CONFIG.BASE_URL, true)
    xhr.setRequestHeader("fileName",file.name)
+   xhr.setRequestHeader('folder', currentPrefix)
    xhr.upload.addEventListener("progress",(event)=>{
         const percentComplete = (event.loaded / event.total) * 100
         setProgress(percentComplete.toFixed(2))
 
    })
+   xhr.onload = () => {
+        if(xhr.status === 200){
+            console.log("Upload success")
+            setProgress(0)
+            refetch()
+        }
+    }
    xhr.send(file)
   }
   if (error) {
@@ -79,7 +88,7 @@ export const MyDrive = ({ prefix = "" }) => {
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <FileSkeleton key={i} />)
           : files.map((file, index) => (
-              <FileCard key={index} file={file} />
+              <FileCard key={index} file={file} refetch={refetch}/>
             ))}
             
       </div>

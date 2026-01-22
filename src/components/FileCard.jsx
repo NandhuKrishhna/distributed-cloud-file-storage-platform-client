@@ -2,17 +2,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CONFIG } from "../utils/config";
 import useDownloadFile from "../hooks/useDownloadFile";
+import useDeleteFiles from "../hooks/useDeleteFiles";
 
-export const FileCard = ({ file }) => {
+export const FileCard = ({ file,refetch }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const isDirectory = file.type === "Directory";
- console.log("File",file)
   const { downloadFile } = useDownloadFile();
   const params = useParams();
-  console.log("params", params)
   const navigate = useNavigate();
-
+  const {deleteFile} = useDeleteFiles()
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -48,6 +47,14 @@ export const FileCard = ({ file }) => {
     downloadFile(`${currentFolder}${file.name}`);
     setIsMenuOpen(false);
   };
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    const currentFolder = params.folderName ? `${params.folderName}/` : "";
+    deleteFile(`${currentFolder}${file.name}`);
+    setIsMenuOpen(false);
+    refetch()
+  };
+
 
   return (
     <div className="group relative bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 ease-out hover:-translate-y-1  z-0 hover:z-10">
@@ -96,6 +103,17 @@ export const FileCard = ({ file }) => {
                     Download
                   </button>
                 )}
+                {!isDirectory && (
+                  <button
+                    onClick={handleDelete}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors font-medium cursor-pointer hover:text-red-500"
+                  >
+                    <svg className="w-4 h-4 text-gray-400 " fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Delete
+                  </button>
+                )}
+                
+                
               </div>
             </div>
           )}
