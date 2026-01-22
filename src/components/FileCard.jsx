@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { CONFIG } from "../utils/config";
+import useDownloadFile from "../hooks/useDownloadFile";
 
 export const FileCard = ({ file }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const isDirectory = file.type === "Directory";
+ console.log("File",file)
+  const { downloadFile } = useDownloadFile();
+  const params = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -15,20 +22,26 @@ export const FileCard = ({ file }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handlers
   const handleMenuToggle = (e) => {
     e.stopPropagation(); 
     setIsMenuOpen(!isMenuOpen);
   };
 
   const handleOpen = (e) => {
+    
+    if (isDirectory) {
+      navigate(`/${file.name}`);
+    } else {
+      window.open(`${CONFIG.BASE_URL}/${params.folderName}/${file.name}`);
+    }
     e.stopPropagation();
     setIsMenuOpen(false);
   };
 
   const handleDownload = (e) => {
     e.stopPropagation();
-    alert(`Downloading ${file.name}...`);
+    const currentFolder = params.folderName ? `${params.folderName}/` : "";
+    downloadFile(`${currentFolder}${file.name}`);
     setIsMenuOpen(false);
   };
 

@@ -1,9 +1,10 @@
-@import "tailwindcss";
-
-/* 1. Import Satoshi */
+/* 1. Font import MUST be the very first line */
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap');
 
-/* 2. Configure the Theme directly here */
+/* 2. Then comes Tailwind */
+@import "tailwindcss";
+
+/* 3. Then your Theme configuration */
 @theme {
   --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }

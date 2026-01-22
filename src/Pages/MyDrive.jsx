@@ -1,14 +1,16 @@
 import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import useGetAllFiles from "../hooks/useFetchAllFiles";
 import { FileSkeleton } from "../components/FileSkeleton";
 import { FileCard } from "../components/FileCard";
 
+export const MyDrive = ({ prefix = "" }) => {
+  const { folderName } = useParams();
+  const navigate = useNavigate();
+  const currentPrefix = folderName || prefix;
 
-
-
-export const MyDrive = () => {
-
-  const { files, loading, error } = useGetAllFiles();
+  console.log("Current Prefix from MyDrive:", currentPrefix);
+  const { files, loading, error } = useGetAllFiles(currentPrefix);
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-center">
@@ -24,11 +26,21 @@ export const MyDrive = () => {
       {/* Header Section */}
       <header className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            My Drive
-          </h1>
+          <div className="flex items-center gap-2">
+            {currentPrefix && (
+              <button 
+                onClick={() => navigate('/')}
+                className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+            )}
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+              {currentPrefix || "My Drive"}
+            </h1>
+          </div>
           <p className="text-gray-500 mt-1 text-sm">
-            Manage your files and folders
+            {currentPrefix ? `Contents of ${currentPrefix}` : "Manage your files and folders"}
           </p>
         </div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all text-sm">

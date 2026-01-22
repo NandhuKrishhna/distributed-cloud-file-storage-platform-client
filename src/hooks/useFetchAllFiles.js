@@ -11,6 +11,7 @@ const useGetAllFiles = (prefix="") => {
         try {
             setLoading(true)
             const finalUrl = prefix? `${CONFIG.BASE_URL}/${prefix}`:CONFIG.BASE_URL
+            console.log("finalUrl",finalUrl)
             const response = await fetch(finalUrl)
             const data = await response.json();
             setFiles(data)
