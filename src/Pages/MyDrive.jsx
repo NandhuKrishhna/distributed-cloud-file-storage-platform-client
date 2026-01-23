@@ -8,7 +8,6 @@ import { CONFIG } from "../utils/config";
 
 export const MyDrive = ({ prefix = "" }) => {
   const [progess , setProgress] = useState(0)
-  console.log("progess",progess)
   const { folderName } = useParams();
   const navigate = useNavigate();
   const currentPrefix = folderName || prefix;
@@ -17,9 +16,8 @@ export const MyDrive = ({ prefix = "" }) => {
   const handleUploadFile = (e) => {
     const file = e.target.files[0]
      const xhr = new XMLHttpRequest()
-   xhr.open("POST",CONFIG.BASE_URL, true)
+   xhr.open("POST",`${CONFIG.BASE_URL}?folder=${currentPrefix}`, true)
    xhr.setRequestHeader("fileName",file.name)
-   xhr.setRequestHeader('folder', currentPrefix)
    xhr.upload.addEventListener("progress",(event)=>{
         const percentComplete = (event.loaded / event.total) * 100
         setProgress(percentComplete.toFixed(2))

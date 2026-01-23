@@ -3,8 +3,12 @@ import { CONFIG } from "../utils/config";
 const useDeleteFiles = () => {
     const deleteFile = async (filePath) => {
         try {
-            const response = await fetch(`${CONFIG.BASE_URL}/${filePath}`, {
+            const response = await fetch(`${CONFIG.BASE_URL}`, {
                 method: "DELETE",
+                body: JSON.stringify({ filePath }),
+                headers: {
+                    "Content-Type": "application/json",
+                },
             });
             if (!response.ok) {
                 throw new Error("Failed to delete file");
