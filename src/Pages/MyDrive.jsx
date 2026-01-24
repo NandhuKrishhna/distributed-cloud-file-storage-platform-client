@@ -1,4 +1,4 @@
-import React from "react";
+
 import { useParams, useNavigate } from "react-router-dom";
 import useGetAllFiles from "../hooks/useFetchAllFiles";
 import { FileSkeleton } from "../components/FileSkeleton";
@@ -8,26 +8,34 @@ import { CONFIG } from "../utils/config";
 
 export const MyDrive = ({ prefix = "" }) => {
   const [progess , setProgress] = useState(0)
-  const { folderName } = useParams();
+  const [shouldRefresh, setShouldRefresh] = useState(false);
+  const params = useParams();
+  const folderPath = params["*"];
   const navigate = useNavigate();
-  const currentPrefix = folderName || prefix;
-  const { files, loading, error, refetch } = useGetAllFiles(currentPrefix);
+  const currentPrefix = folderPath || prefix;
+  const { files, loading, error } = useGetAllFiles(currentPrefix, shouldRefresh);
+
+  const handleBack = () => {
+    const parts = currentPrefix.split('/');
+    parts.pop();
+    const parent = parts.join('/');
+    navigate(parent ? `/drive/${parent}` : '/');
+  };
 
   const handleUploadFile = (e) => {
     const file = e.target.files[0]
      const xhr = new XMLHttpRequest()
-   xhr.open("POST",`${CONFIG.BASE_URL}?folder=${currentPrefix}`, true)
-   xhr.setRequestHeader("fileName",file.name)
+   xhr.open("POST",`${CONFIG.BASE_URL}/files/upload?folder=${currentPrefix}&fileName=${file.name}`, true)
    xhr.upload.addEventListener("progress",(event)=>{
         const percentComplete = (event.loaded / event.total) * 100
         setProgress(percentComplete.toFixed(2))
 
    })
    xhr.onload = () => {
-        if(xhr.status === 200){
+        if(xhr.status === 201){
             console.log("Upload success")
             setProgress(0)
-            refetch()
+            setShouldRefresh(prev => !prev)
         }
     }
    xhr.send(file)
@@ -50,7 +58,7 @@ export const MyDrive = ({ prefix = "" }) => {
           <div className="flex items-center gap-2">
             {currentPrefix && (
               <button 
-                onClick={() => navigate('/')}
+                onClick={handleBack}
                 className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -86,7 +94,7 @@ export const MyDrive = ({ prefix = "" }) => {
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <FileSkeleton key={i} />)
           : files.map((file, index) => (
-              <FileCard key={index} file={file} refetch={refetch}/>
+              <FileCard key={index} file={file} setShouldRefresh={setShouldRefresh}/>
             ))}
             
       </div>

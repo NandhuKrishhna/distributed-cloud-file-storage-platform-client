@@ -6,7 +6,7 @@ import useDownloadFile from "../hooks/useDownloadFile";
 import useDeleteFiles from "../hooks/useDeleteFiles";
 import useRenameFile from "../hooks/useRenameFile";
 
-export const FileCard = ({ file,refetch }) => {
+export const FileCard = ({ file , setShouldRefresh }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const isDirectory = file.type === "Directory";
@@ -17,7 +17,6 @@ export const FileCard = ({ file,refetch }) => {
   const navigate = useNavigate();
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [newName, setNewName] = useState(file.name);
-  console.log("newName", newName)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -35,13 +34,13 @@ export const FileCard = ({ file,refetch }) => {
 
   const handleOpen = (e) => {
     
+    const currentPath = params["*"] || "";
     if (isDirectory) {
-      navigate(`/${file.name}`);
+      const newPath = currentPath ? `${currentPath}/${file.name}` : file.name;
+      navigate(`/drive/${newPath}`);
     } else {
-      const url = params.folderName 
-        ? `${CONFIG.BASE_URL}/${params.folderName}/${file.name}`
-        : `${CONFIG.BASE_URL}/${file.name}`;
-      window.open(url);
+      const fileUrl = currentPath ? `${CONFIG.BASE_URL}/${currentPath}/${file.name}` : `${CONFIG.BASE_URL}/${file.name}`;
+      window.open(fileUrl);
     }
     e.stopPropagation();
     setIsMenuOpen(false);
@@ -49,16 +48,17 @@ export const FileCard = ({ file,refetch }) => {
 
   const handleDownload = (e) => {
     e.stopPropagation();
-    const currentFolder = params.folderName ? `${params.folderName}/` : "";
+    const currentPath = params["*"] || "";
+    const currentFolder = currentPath ? `${currentPath}/` : "";
     downloadFile(`${currentFolder}${file.name}`);
     setIsMenuOpen(false);
   };
   const handleDelete = (e) => {
     e.stopPropagation();
-    const currentFolder = params.folderName ? `${params.folderName}/` : "";
+    const currentPath = params["*"] || "";
+    const currentFolder = currentPath ? `${currentPath}/` : "";
     deleteFile(`${currentFolder}${file.name}`);
     setIsMenuOpen(false);
-    refetch()
   };
 
   const handleRenameClick = (e) => {
@@ -69,9 +69,10 @@ export const FileCard = ({ file,refetch }) => {
 
   const handleRenameSubmit = async (e) => {
     e.stopPropagation();
-    await renameFile(file.name, newName, params.folderName)
+    const currentPath = params["*"] || "";
+    await renameFile(file.name, newName, currentPath)
     setIsRenameModalOpen(false);
-    refetch()
+    setShouldRefresh(prev => !prev)
   };
 
 

@@ -3,9 +3,8 @@ import { CONFIG } from "../utils/config";
 const useDeleteFiles = () => {
     const deleteFile = async (filePath) => {
         try {
-            const response = await fetch(`${CONFIG.BASE_URL}`, {
+            const response = await fetch(`${CONFIG.BASE_URL}/files/delete?filePath=${filePath}`, {
                 method: "DELETE",
-                body: JSON.stringify({ filePath }),
                 headers: {
                     "Content-Type": "application/json",
                 },

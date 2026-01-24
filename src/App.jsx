@@ -6,7 +6,7 @@ function App() {
   return (
     <Routes>  
       <Route path="/" element={<MyDrive />} />
-      <Route path="/:folderName" element={<MyDrive />} />
+      <Route path="/drive/*" element={<MyDrive />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

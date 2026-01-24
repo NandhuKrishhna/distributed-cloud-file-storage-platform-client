@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { CONFIG } from "../utils/config";
 
-const useGetAllFiles = (prefix="") => {
+const useGetAllFiles = (prefix="", shouldRefresh) => {
     
     const [files, setFiles] = useState([]);
     const [loading , setLoading ] = useState(false);
@@ -10,7 +10,7 @@ const useGetAllFiles = (prefix="") => {
     const fetchFiles = async () => {
         try {
             setLoading(true)
-            const finalUrl = `${CONFIG.BASE_URL}?folder=${prefix ?? ""}`
+            const finalUrl = `${CONFIG.BASE_URL}/files?folder=${prefix ?? ""}`
             const response = await fetch(finalUrl)
             const data = await response.json();
             setFiles(data)
@@ -24,9 +24,10 @@ const useGetAllFiles = (prefix="") => {
 
     useEffect(()=>{
        fetchFiles()
-    },[prefix])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    },[ prefix, shouldRefresh])
 
-    return { files , loading , error, refetch: fetchFiles }
+    return { files , loading , error }
 }
 
 export default useGetAllFiles
