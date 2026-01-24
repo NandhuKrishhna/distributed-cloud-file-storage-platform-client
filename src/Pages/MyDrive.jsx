@@ -1,8 +1,10 @@
 
 import { useParams, useNavigate } from "react-router-dom";
 import useGetAllFiles from "../hooks/useFetchAllFiles";
+import useCreateFolderMutation from "../hooks/useCreateFolder";
 import { FileSkeleton } from "../components/FileSkeleton";
 import { FileCard } from "../components/FileCard";
+import { CreateFolderModal } from "../components/CreateFolderModal";
 import { useState } from "react";
 import { CONFIG } from "../utils/config";
 
@@ -14,6 +16,18 @@ export const MyDrive = ({ prefix = "" }) => {
   const navigate = useNavigate();
   const currentPrefix = folderPath || prefix;
   const { files, loading, error } = useGetAllFiles(currentPrefix, shouldRefresh);
+  const { createFolder } = useCreateFolderMutation();
+  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+
+  const handleCreateFolder = async (e) => {
+    e.preventDefault();
+    if (!newFolderName) return;
+    await createFolder(currentPrefix, newFolderName);
+    setIsFolderModalOpen(false);
+    setNewFolderName("");
+    setShouldRefresh(prev => !prev);
+  }
 
   const handleBack = () => {
     const parts = currentPrefix.split('/');
@@ -72,25 +86,37 @@ export const MyDrive = ({ prefix = "" }) => {
             {currentPrefix ? `Contents of ${currentPrefix}` : "Manage your files and folders"}
           </p>
         </div>
-       <label className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all text-sm cursor-pointer inline-block">
+        
+        <div className="flex gap-3">
+            <button 
+                onClick={() => setIsFolderModalOpen(true)}
+                className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-5 py-2.5 rounded-xl font-medium shadow-sm transition-all text-sm cursor-pointer flex items-center gap-2"
+            >
+                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                New Folder
+            </button>
+            <label className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all text-sm cursor-pointer inline-block flex items-center justify-center">
     
-    {/* The actual text goes here, inside the label, NOT the input */}
-    <span>{progess > 0 ? `Uploading... ${progess}%` : "+ New Upload"}</span>
-    
-    {/* The input is hidden, but still functional */}
-    <input 
-        type="file" 
-        onChange={handleUploadFile} 
-        className="hidden" 
-    />
-    
-</label>
+                {/* The actual text goes here, inside the label, NOT the input */}
+                <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    {progess > 0 ? `Uploading... ${progess}%` : "Upload File"}
+                </span>
+                
+                {/* The input is hidden, but still functional */}
+                <input 
+                    type="file" 
+                    onChange={handleUploadFile} 
+                    className="hidden" 
+                />
+                
+            </label>
+        </div>
       </header>
 
-      {/* Grid Layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         
-        {/* Loading Logic */}
+
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <FileSkeleton key={i} />)
           : files.map((file, index) => (
@@ -98,13 +124,20 @@ export const MyDrive = ({ prefix = "" }) => {
             ))}
             
       </div>
-      
-      {/* Empty State Logic */}
       {!loading && files && files.length === 0 && (
          <div className="col-span-full py-20 text-center">
             <p className="text-gray-400">No files found. Upload one to get started!</p>
          </div>
       )}
+
+      <CreateFolderModal 
+        isOpen={isFolderModalOpen} 
+        onClose={() => setIsFolderModalOpen(false)} 
+        onSubmit={handleCreateFolder}
+        folderName={newFolderName} 
+        setFolderName={setNewFolderName}
+      />
     </div>
   );
 };
+
