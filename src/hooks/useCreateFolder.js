@@ -1,17 +1,19 @@
 import { CONFIG } from "../utils/config"
 
 const useCreateFolderMutation = () => {
-  const createFolder = async(folderPath="", folderName) => {
+  const createFolder = async(folderName,id) => {
 
     try {
-        const response = await fetch(`${CONFIG.BASE_URL}/folder/create?directoryPath=${folderPath}`,{
+        const response = await fetch(`${CONFIG.BASE_URL}/directory/create`,{
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                folderName: folderName
-            })
+                name: folderName,
+                parentDirId: id
+            }),
+            credentials: "include"
         })
         const data = await response.json()
         return data

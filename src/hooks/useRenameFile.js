@@ -2,17 +2,17 @@ import { CONFIG } from "../utils/config"
 
 const useRenameFile = ()=>{
 
-   const renameFile = async(oldName, newName, folder="")=>{
+   const renameFile = async(fileId,newName)=>{
     try {
-      await fetch(`${CONFIG.BASE_URL}/files/rename/${oldName}`,{
+      await fetch(`${CONFIG.BASE_URL}/files/rename/${fileId}`,{
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                newName,
-                folder
-            })
+                newName
+            }),
+            credentials: "include"
         })
       
     } catch (error) {

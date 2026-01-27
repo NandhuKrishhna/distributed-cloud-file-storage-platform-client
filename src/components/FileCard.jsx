@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { CONFIG } from "../utils/config";
 import useDownloadFile from "../hooks/useDownloadFile";
 import useDeleteFiles from "../hooks/useDeleteFiles";
@@ -9,11 +9,10 @@ import useRenameFile from "../hooks/useRenameFile";
 export const FileCard = ({ file , setShouldRefresh }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
-  const isDirectory = file.type === "Directory";
+  const isDirectory = file.type === "directory";
   const {deleteFile} = useDeleteFiles() 
   const { downloadFile } = useDownloadFile();
   const {renameFile} = useRenameFile()
-  const params = useParams();
   const navigate = useNavigate();
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [newName, setNewName] = useState(file.name);
@@ -33,13 +32,11 @@ export const FileCard = ({ file , setShouldRefresh }) => {
   };
 
   const handleOpen = (e) => {
-    
-    const currentPath = params["*"] || "";
     if (isDirectory) {
-      const newPath = currentPath ? `${currentPath}/${file.name}` : file.name;
-      navigate(`/drive/${newPath}`);
+      navigate(`/${file._id}`);
     } else {
-      const fileUrl = currentPath ? `${CONFIG.BASE_URL}/${currentPath}/${file.name}` : `${CONFIG.BASE_URL}/${file.name}`;
+      const fileName =`${file._id}${file.extension}`
+      const fileUrl = `${CONFIG.BASE_URL}/${fileName}`
       window.open(fileUrl);
     }
     e.stopPropagation();
@@ -48,17 +45,14 @@ export const FileCard = ({ file , setShouldRefresh }) => {
 
   const handleDownload = (e) => {
     e.stopPropagation();
-    const currentPath = params["*"] || "";
-    const currentFolder = currentPath ? `${currentPath}/` : "";
-    downloadFile(`${currentFolder}${file.name}`);
+    downloadFile(`${file._id}${file.extension}`);
     setIsMenuOpen(false);
   };
   const handleDelete = (e) => {
     e.stopPropagation();
-    const currentPath = params["*"] || "";
-    const currentFolder = currentPath ? `${currentPath}/` : "";
-    deleteFile(`${currentFolder}${file.name}`);
+    deleteFile(file._id);
     setIsMenuOpen(false);
+    setShouldRefresh(prev => !prev)
   };
 
   const handleRenameClick = (e) => {
@@ -69,8 +63,7 @@ export const FileCard = ({ file , setShouldRefresh }) => {
 
   const handleRenameSubmit = async (e) => {
     e.stopPropagation();
-    const currentPath = params["*"] || "";
-    await renameFile(file.name, newName, currentPath)
+    await renameFile(file._id, newName)
     setIsRenameModalOpen(false);
     setShouldRefresh(prev => !prev)
   };

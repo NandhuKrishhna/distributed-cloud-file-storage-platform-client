@@ -4,7 +4,9 @@ const useDownloadFile = () => {
     const downloadFile = async (fileName) => {
         try {
             const fileUrl = `${CONFIG.BASE_URL}/files/download?filePath=${fileName}`
-            const response = await fetch(fileUrl)
+            const response = await fetch(fileUrl, {
+                credentials: "include"
+            })
             if (!response.ok) {
                 throw new Error('Failed to download file')
             }

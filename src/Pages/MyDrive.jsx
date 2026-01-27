@@ -1,21 +1,21 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import useGetAllFiles from "../hooks/useFetchAllFiles";
 import useCreateFolderMutation from "../hooks/useCreateFolder";
 import { FileSkeleton } from "../components/FileSkeleton";
 import { FileCard } from "../components/FileCard";
 import { CreateFolderModal } from "../components/CreateFolderModal";
 import { useState } from "react";
 import { CONFIG } from "../utils/config";
+import toast from "react-hot-toast";
+import { Header } from "../components/Header";
+import useFetchAllDirectory from "../hooks/auth/useFetchDirectoryList";
 
-export const MyDrive = ({ prefix = "" }) => {
+export const MyDrive = () => {
   const [progess , setProgress] = useState(0)
   const [shouldRefresh, setShouldRefresh] = useState(false);
-  const params = useParams();
-  const folderPath = params["*"];
+  const { id } = useParams();
   const navigate = useNavigate();
-  const currentPrefix = folderPath || prefix;
-  const { files, loading, error } = useGetAllFiles(currentPrefix, shouldRefresh);
+  const { directories, loading, error, currentDirectory } = useFetchAllDirectory(id, shouldRefresh)
   const { createFolder } = useCreateFolderMutation();
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -23,54 +23,77 @@ export const MyDrive = ({ prefix = "" }) => {
   const handleCreateFolder = async (e) => {
     e.preventDefault();
     if (!newFolderName) return;
-    await createFolder(currentPrefix, newFolderName);
+    await createFolder(newFolderName, id);
     setIsFolderModalOpen(false);
     setNewFolderName("");
     setShouldRefresh(prev => !prev);
   }
 
   const handleBack = () => {
-    const parts = currentPrefix.split('/');
-    parts.pop();
-    const parent = parts.join('/');
-    navigate(parent ? `/drive/${parent}` : '/');
+    if (currentDirectory?.parentDirId) {
+        navigate(`/${currentDirectory.parentDirId}`);
+    } else {
+        navigate("/");
+    }
   };
 
   const handleUploadFile = (e) => {
-    const file = e.target.files[0]
-     const xhr = new XMLHttpRequest()
-   xhr.open("POST",`${CONFIG.BASE_URL}/files/upload?folder=${currentPrefix}&fileName=${file.name}`, true)
-   xhr.upload.addEventListener("progress",(event)=>{
-        const percentComplete = (event.loaded / event.total) * 100
-        setProgress(percentComplete.toFixed(2))
+    const file = e.target.files[0];
+    if (!file) return;
 
-   })
-   xhr.onload = () => {
-        if(xhr.status === 201){
-            console.log("Upload success")
-            setProgress(0)
-            setShouldRefresh(prev => !prev)
-        }
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const xhr = new XMLHttpRequest();
+    // directory param is optional; backend handles fallback to root if empty
+    const directoryParam = id ? `?directory=${id}` : "";
+    xhr.open("POST", `${CONFIG.BASE_URL}/files/upload${directoryParam}`, true);
+    xhr.withCredentials = true;
+
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        setProgress(percentComplete.toFixed(2));
+      }
+    });
+
+    xhr.onload = () => {
+      if (xhr.status === 201) {
+        toast.success("File uploaded successfully");
+        setProgress(0);
+        setShouldRefresh((prev) => !prev);
+      } else {
+        toast.error("Upload failed");
+        setProgress(0);
+      }
+    };
+
+    xhr.onerror = () => {
+        toast.error("Upload failed");
+        setProgress(0);
     }
-   xhr.send(file)
-  }
+
+    xhr.send(formData);
+  };
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-center">
         <div className="text-5xl mb-4">😕</div>
         <h2 className="text-xl font-bold text-gray-800">Oops, something went wrong.</h2>
         <p className="text-gray-500 mt-2">We couldn't load your files. Please try again.</p>
+        <button onClick={() => navigate("/")} className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all text-sm cursor-pointer inline-block flex items-center justify-center">Go to Login</button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-8 sm:p-12 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#f3f4f6] via-[#e5e7eb] to-[#d1d5db] p-8 sm:p-12 font-sans">
+      <Header />
       {/* Header Section */}
-      <header className="flex items-center justify-between mb-10">
+      <div className="flex items-center justify-between mb-10">
         <div>
           <div className="flex items-center gap-2">
-            {currentPrefix && (
+            {!currentDirectory?.isRootDirectory && (
               <button 
                 onClick={handleBack}
                 className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
@@ -79,11 +102,11 @@ export const MyDrive = ({ prefix = "" }) => {
               </button>
             )}
             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-              {currentPrefix || "My Drive"}
+              {currentDirectory?.name || "My Drive"}
             </h1>
           </div>
           <p className="text-gray-500 mt-1 text-sm">
-            {currentPrefix ? `Contents of ${currentPrefix}` : "Manage your files and folders"}
+            {currentDirectory ? `Contents of ${currentDirectory.name}` : "Manage your files and folders"}
           </p>
         </div>
         
@@ -112,19 +135,19 @@ export const MyDrive = ({ prefix = "" }) => {
                 
             </label>
         </div>
-      </header>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         
 
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <FileSkeleton key={i} />)
-          : files.map((file, index) => (
+          : directories.map((file, index) => (
               <FileCard key={index} file={file} setShouldRefresh={setShouldRefresh}/>
             ))}
             
       </div>
-      {!loading && files && files.length === 0 && (
+      {!loading && directories && directories.length === 0 && (
          <div className="col-span-full py-20 text-center">
             <p className="text-gray-400">No files found. Upload one to get started!</p>
          </div>

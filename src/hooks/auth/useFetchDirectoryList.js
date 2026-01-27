@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react"
-import { CONFIG } from "../utils/config";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { CONFIG } from "../../utils/config";
 
-const useGetAllFiles = (prefix="", shouldRefresh) => {
+const useFetchAllDirectory = (directoryId, shouldRefresh) => {
     const navigate = useNavigate();
-    const [files, setFiles] = useState([]);
+    const [directories, setDirectories] = useState([]);
     const [loading , setLoading ] = useState(false);
     const [error , setError ] = useState(null);
+    const [currentDirectory, setCurrentDirectory] = useState(null);
 
-    const fetchFiles = async () => {
+    const fetchDirectory = async (id) => {
         try {
             setLoading(true)
             setError(null) 
             
-            const finalUrl = `${CONFIG.BASE_URL}/files?folder=${prefix ?? ""}`
+            const finalUrl = id ? `${CONFIG.BASE_URL}/directory/${id}` : `${CONFIG.BASE_URL}/directory`
             const response = await fetch(finalUrl, { credentials: "include" })
 
             if (response.status === 401) {
@@ -27,12 +28,13 @@ const useGetAllFiles = (prefix="", shouldRefresh) => {
             if (!response.ok) {
                 throw new Error(data.message || `Error ${response.status}: ${response.statusText}`);
             }
-            setFiles(data)
+            setDirectories(data?.data.docs)
+            setCurrentDirectory(data?.currentDirectory)
 
         } catch (err) { 
             console.error("Fetch Error:", err.message)
             setError(err.message) 
-            setFiles([]) 
+            setDirectories([]) 
             toast.error(err.message)
         } finally {
             setLoading(false)
@@ -40,11 +42,11 @@ const useGetAllFiles = (prefix="", shouldRefresh) => {
     }
 
     useEffect(()=>{
-       fetchFiles()
+       fetchDirectory(directoryId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[ prefix, shouldRefresh])
+    },[directoryId, shouldRefresh])
 
-    return { files, loading, error }
+    return { directories, loading, error, currentDirectory }
 }
 
-export default useGetAllFiles
+export default useFetchAllDirectory
