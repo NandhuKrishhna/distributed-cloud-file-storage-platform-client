@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { MyDrive } from './Pages/MyDrive'
 import { Login } from './Pages/Login'
 import { NotFound } from './Pages/NotFound'
+import { Register } from './Pages/Register'
 import { Toaster } from 'react-hot-toast'
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
     <Routes> 
       <Route path="/" element={<MyDrive />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/:id" element={<MyDrive />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

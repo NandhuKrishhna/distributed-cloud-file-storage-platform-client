@@ -1,18 +1,19 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import useLogin from "../hooks/auth/useLogin";
+import { Link, useNavigate } from "react-router-dom";
+import useRegisterUserMutation from "../hooks/auth/useRegisterUser";
 
-export const Login = () => {
+export const Register = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, loading } = useLogin();
+  const { registerUserMutation, isLoading } = useRegisterUserMutation();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await login(email, password);
-    if (success) {
-      navigate("/");
+    const result = await registerUserMutation(name, email, password);
+    if (result.status) {
+        navigate("/"); 
     }
   };
 
@@ -29,14 +30,45 @@ export const Login = () => {
         <div className="bg-white/70 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] rounded-3xl p-8 sm:p-10 transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.12)]">
           <div className="mb-10 text-center">
             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
-              Welcome Back
+              Create Account
             </h1>
             <p className="text-gray-500 text-sm">
-              Enter your credentials to access your drive
+              Enter your details to register
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            
+            <div className="space-y-2">
+              <label 
+                htmlFor="name" 
+                className="block text-sm font-medium text-gray-700 ml-1"
+              >
+                Full Name
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg 
+                    className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <input
+                  id="name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="block w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200/60 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 sm:text-sm"
+                  placeholder="John Doe"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label 
                 htmlFor="email" 
@@ -68,17 +100,12 @@ export const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between ml-1">
-                <label 
-                  htmlFor="password" 
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Password
-                </label>
-                <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors">
-                  Forgot password?
-                </a>
-              </div>
+              <label 
+                htmlFor="password" 
+                className="block text-sm font-medium text-gray-700ml-1"
+              >
+                Password
+              </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg 
@@ -105,19 +132,19 @@ export const Login = () => {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-blue-500/30 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 transform hover:-translate-y-0.5"
               >
-                {loading ? (
+                {isLoading ? (
                   <span className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Signing in...
+                    Creating account...
                   </span>
                 ) : (
-                  "Sign In"
+                  "Create Account"
                 )}
               </button>
             </div>
@@ -130,15 +157,15 @@ export const Login = () => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white/50 text-gray-500 backdrop-blur-sm">
-                  Don't have an account?
+                  Already have an account?
                 </span>
               </div>
             </div>
 
             <div className="mt-6 text-center">
-              <span onClick={() => navigate("/register")} className="font-medium text-blue-600 hover:text-blue-500 transition-colors cursor-pointer">
-                Create an account
-              </span>
+              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+                Sign in
+              </Link>
             </div>
           </div>
         </div>

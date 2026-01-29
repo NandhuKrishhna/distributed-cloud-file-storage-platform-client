@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import useCheckAuth from "../hooks/auth/useCheckAuth";
-import useLogout from "../hooks/auth/useLogout";
+import { useLogout, useLogoutAll } from "../hooks/auth/index.js";
 
 export const Header = () => {
-  const { user, loading } = useCheckAuth();
-  const { logout } = useLogout();
+  const { user , loading } = useCheckAuth();
+  const { logout , loading : logoutLoading } = useLogout();
+  const { logoutAll , loading : logoutAllLoading } = useLogoutAll();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -95,10 +96,19 @@ export const Header = () => {
              <div className="border-t border-gray-100 my-1"></div>
              <button
                 onClick={logout}
+                disabled={logoutLoading}
                 className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
                 >
                 <svg className="w-5 h-5 text-red-400 group-hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                Sign out
+                {logoutLoading ? 'Logging out...' : 'Sign out'}
+             </button>
+             <button
+                onClick={logoutAll}
+                disabled={logoutAllLoading}
+                className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                >
+                <svg className="w-5 h-5 text-red-400 group-hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                {logoutAllLoading ? 'Logging out...' : 'Sign out all'}
              </button>
            </div>
         )}
