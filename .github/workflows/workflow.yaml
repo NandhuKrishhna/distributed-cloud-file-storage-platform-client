@@ -1,0 +1,53 @@
+name: Deploy Cloud Labs Client
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  deploy-client:
+    runs-on: ubuntu-latest
+
+    env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+      SERVER_USER: ${{ secrets.SSH_USER }}
+      SERVER_HOST: ${{ secrets.SSH_HOST }}
+      REMOTE_TARGET_DIR: /var/www/my-clound-react-app
+      VITE_BASE_URL: ${{ secrets.VITE_BASE_URL }}
+      VITE_ENV: production
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$SERVER_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          echo "Deploying build artifacts to $SERVER_HOST..."
+          rsync -avz --delete dist/ \
+            ${SERVER_USER}@${SERVER_HOST}:${REMOTE_TARGET_DIR}/
+
+      - name: Reload Nginx
+        run: |
+          echo "Reloading Nginx..."
+          ssh ${SERVER_USER}@${SERVER_HOST} "sudo systemctl reload nginx"
+          ssh ${SERVER_USER}@${SERVER_HOST} "sudo systemctl status nginx"
