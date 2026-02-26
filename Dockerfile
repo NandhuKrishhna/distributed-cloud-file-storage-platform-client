@@ -6,14 +6,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Accept build arguments
-ARG VITE_BASE_URL
-ARG VITE_ENV
-
-# Set them as environment variables during the build
-ENV VITE_BASE_URL=$VITE_BASE_URL
-ENV VITE_ENV=$VITE_ENV
-
 COPY . .
 RUN npm run build
 
